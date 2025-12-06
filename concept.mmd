@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant App as RAG<br/>App
+    participant DB as ChromaDB
+    participant LLM as ChatOllama<br/>llama3.2
+
+    Note over App,DB: Docs are already chunked<br/>and embedded into ChromaDB
+
+    rect rgb(237,248,255)
+        U->>App: Ask<br/>question
+    end
+
+    rect rgb(232,245,233)
+        App->>DB: Retrieve top-k<br/>relevant chunks
+        DB-->>App: Return chunks as<br/>context
+    end
+
+    rect rgb(252,241,244)
+        App->>LLM: Prompt with<br/>context + question
+        LLM-->>App: Answer using<br/>context only
+    end
+
+    rect rgb(232,234,246)
+        App-->>U: Final answer<br/>or fallback message
+    end

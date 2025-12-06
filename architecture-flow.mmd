@@ -1,0 +1,60 @@
+flowchart LR
+
+    %% ========= CLIENT =========
+    subgraph C[Client]
+        U[User]
+        CB@{ icon: "fa:comment-dots", form: "circle", label: "Chatbot", pos: "b", h: 48 }
+        U --> CB
+    end
+    style C fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    style U fill:#93c5fd,stroke:#2563eb,stroke-width:2px
+    style CB fill:#f1f5f9,stroke:#2563eb,stroke-width:2px
+
+    %% ========= BACKEND / APP LAYER =========
+    subgraph B[RAG Backend - Python LangChain]
+        DIR[Document Loader - load_documents]
+        SPLIT[Text Splitter - RecursiveCharacterTextSplitter]
+        VEC[Vector DB Builder - create_vector_db]
+        RAG[Query Orchestrator - setup_rag_chain]
+    end
+    style B fill:#dcfce7,stroke:#22c55e,stroke-width:2px
+    style DIR fill:#bbf7d0,stroke:#16a34a,stroke-width:2px
+    style SPLIT fill:#86efac,stroke:#16a34a,stroke-width:2px
+    style VEC fill:#bbf7d0,stroke:#22c55e,stroke-width:2px
+    style RAG fill:#6ee7b7,stroke:#166534,stroke-width:2.5px
+
+    %% ========= DATA LAYER =========
+    subgraph D[Data Layer]
+        FS[(Document Folder PDFs DOCX)]
+        DB[(ChromaDB Persisted Vector Store)]
+    end
+    style D fill:#fef9c3,stroke:#fde047,stroke-width:2px
+    style FS fill:#fde68a,stroke:#ca8a04,stroke-width:2px
+    style DB fill:#fde68a,stroke:#f59e42,stroke-width:2px
+
+    %% ========= MODEL RUNTIME (OLLAMA) =========
+    subgraph M[Ollama Runtime]
+        EMB[OllamaEmbeddings - nomic-embed-text]
+        LLM[ChatOllama - llama3.2]
+    end
+    style M fill:#f3e8ff,stroke:#a21caf,stroke-width:2px
+    style EMB fill:#d8b4fe,stroke:#a21caf,stroke-width:2px
+    style LLM fill:#d8b4fe,stroke:#a21caf,stroke-width:2px
+
+    %% ========= INGESTION FLOW =========
+    FS -->|Files| DIR
+    DIR -->|Documents list| SPLIT
+    SPLIT -->|Chunks| VEC
+    VEC -->|Embed + Store| DB
+    VEC --> EMB
+
+    %% ========= QUERY / RAG FLOW =========
+    CB -->|Question| RAG
+    RAG -->|Top-k Retrieve| DB
+    DB -->|Relevant Chunks| RAG
+    RAG -->|LLM Prompt| LLM
+    LLM -->|Answer| RAG
+    RAG -->|Response| CB
+
+    %% ========= EMBEDDING FLOW =========
+    RAG -.->|Uses Embeddings| EMB

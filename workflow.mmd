@@ -1,0 +1,16 @@
+sequenceDiagram
+    participant U as User
+    participant App as RAG Backend<br/>retrieval_chain.invoke()
+    participant DB as Chroma Vector DB
+    participant EMB as OllamaEmbeddings
+    participant LLM as ChatOllama
+
+    U->>App: Ask a question (input)
+    App->>DB: Retrieve top-k similar chunks
+    DB->>EMB: Use embeddings to compute similarity search
+    EMB-->>DB: Embedding vectors + scores returned
+    DB-->>App: Top-k most relevant document chunks (context)
+    
+    App->>LLM: Send prompt with strict instructions + context + question
+    LLM-->>App: Context-grounded answer <br/>OR fallback message if insufficient context
+    App-->>U: Final Response
